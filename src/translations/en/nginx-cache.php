@@ -33,5 +33,5 @@ return [
 	'Add URI' => 'Add URI',
 
 	'Reload Command' => 'Reload Command',
-	'The command to reload nginx. Won\'t run if blank.' => 'The command to reload nginx. Won\'t run if blank.',
+	'The command to reload nginx (won\'t run if blank).' => 'The command to reload nginx (won\'t run if blank).',
 ];

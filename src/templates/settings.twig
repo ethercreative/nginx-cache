@@ -106,6 +106,13 @@
 {{ textField({
 	name: 'reloadCommand',
 	label: 'Reload Command'|t('nginx-cache'),
-	instructions: 'The command to reload nginx. Won\'t run if blank.'|t('nginx-cache'),
+	instructions: 'The command to reload nginx (won\'t run if blank).'|t('nginx-cache'),
 	value: settings.reloadCommand,
 }) }}
+
+<p>
+	<strong>Command not working</strong><br>
+	PHP needs elevated permissions to execute the command. Try adding
+	<code>www-data ALL=(ALL:ALL) NOPASSWD:nginx -s reload</code> to you
+	<code>/etc/sudoers</code> file via <code>sudo visudo</code>
+</p>

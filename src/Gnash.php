@@ -140,6 +140,15 @@ class Gnash extends Plugin
 	// Events
 	// =========================================================================
 
+	/**
+	 * @throws SiteNotFoundException
+	 */
+	protected function afterInstall ()
+	{
+		$this->gnash->buildNginxConfig($this->getSettings());
+		parent::afterInstall();
+	}
+
 	public function onElementEvent (ElementEvent $event)
 	{
 		$this->gnash->purgeElement($event->element);

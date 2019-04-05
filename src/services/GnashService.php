@@ -106,6 +106,9 @@ XYZZY;
 		$server = <<<XYZZY
 set $skip 1;
 $checks
+#location ~ /purge(/.*) {
+#	fastcgi_cache_purge $cacheHandle "\$host\$1*";
+#}
 XYZZY;
 
 		// Config: Location
