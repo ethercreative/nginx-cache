@@ -1,0 +1,111 @@
+{% from '_includes/forms' import
+	autosuggestField,
+	textField,
+	lightswitchField,
+	editableTableField
+%}
+
+{{ autosuggestField({
+	name: 'cachePath',
+	label: 'Cache Path'|t('nginx-cache'),
+	instructions: 'The cache storage path (must be absolute)'|t('nginx-cache'),
+	value: settings.cachePath,
+	first: true,
+	required: true,
+	suggestEnvVars: true,
+	suggestAliases: true,
+}) }}
+
+{{ textField({
+	name: 'maxSize',
+	label: 'Max Size'|t('nginx-cache'),
+	instructions: 'The max size the stored cache can use. [How to format size](http://nginx.org/en/docs/syntax.html).'|t('nginx-cache'),
+	value: settings.maxSize,
+	required: true,
+}) }}
+
+{{ textField({
+	name: 'inactive',
+	label: 'Inactive'|t('nginx-cache'),
+	instructions: 'The amount of time a file has to be inactive before the cache is automatically cleared. [How to format time](http://nginx.org/en/docs/syntax.html).'|t('nginx-cache'),
+	value: settings.inactive,
+	required: true,
+}) }}
+
+{{ lightswitchField({
+	name: 'includeQueryString',
+	label: 'Include Query String'|t('nginx-cache'),
+	instructions: 'Whether or not to include the query string when caching'|t('nginx-cache'),
+	on: settings.includeQueryString,
+}) }}
+
+{{ editableTableField({
+	id: 'cacheDuration',
+	name: 'cacheDuration',
+	label: 'Cache Duration'|t('nginx-cache'),
+	instructions: 'How long to cache specific responses'|t('nginx-cache'),
+	cols: [
+		{
+			type: 'singleline',
+			heading: 'Response Type'|t('nginx-cache'),
+			code: true,
+			required: true,
+		},
+		{
+			type: 'singleline',
+			heading: 'Duration'|t('nginx-cache'),
+			code: true,
+			required: true,
+		},
+	],
+	rows: settings.cacheDuration,
+	addRowLabel: 'Add Cache Duration'|t('nginx-cache'),
+}) }}
+
+{{ lightswitchField({
+	name: 'serveStaleOnError',
+	label: 'Serve Stale on Error'|t('nginx-cache'),
+	instructions: 'Will serve stale content (if available) on a 50x response'|t('nginx-cache'),
+	on: settings.serveStaleOnError,
+}) }}
+
+{{ editableTableField({
+	id: 'includedUris',
+	name: 'includedUris',
+	label: 'Included URIs'|t('nginx-cache'),
+	instructions: 'URIs to include when caching'|t('nginx-cache'),
+	cols: [
+		{
+			type: 'singleline',
+			heading: 'URI'|t('nginx-cache'),
+			code: true,
+			required: true,
+		},
+	],
+	rows: settings.includedUris,
+	addRowLabel: 'Add URI'|t('nginx-cache'),
+}) }}
+
+{{ editableTableField({
+	id: 'excludedUris',
+	name: 'excludedUris',
+	label: 'Excluded URIs'|t('nginx-cache'),
+	instructions: 'URIs to exclude when caching'|t('nginx-cache'),
+	cols: [
+		{
+			type: 'singleline',
+			heading: 'URI'|t('nginx-cache'),
+			code: true,
+			required: true,
+		},
+	],
+	rows: settings.excludedUris,
+	addRowLabel: 'Add URI'|t('nginx-cache'),
+}) }}
+
+{{ textField({
+	name: 'reloadCommand',
+	label: 'Reload Command'|t('nginx-cache'),
+	instructions: 'The command to reload nginx. Won\'t run if blank.'|t('nginx-cache'),
+	value: settings.reloadCommand,
+}) }}
