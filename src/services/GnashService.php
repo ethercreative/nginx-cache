@@ -12,6 +12,7 @@ use Craft;
 use craft\base\Component;
 use craft\base\Element;
 use craft\base\ElementInterface;
+use craft\db\Query;
 use craft\errors\SiteNotFoundException;
 use ether\gnash\Gnash;
 use ether\gnash\models\Settings;
@@ -54,7 +55,7 @@ class GnashService extends Component
 			unlink($locationPath);
 
 		// 2. Build new config
-		$cachePath = Craft::parseEnv($settings->cachePath);
+		$cachePath = rtrim(Craft::parseEnv($settings->cachePath), '/');
 
 		// $gnash_request_uri is the $request_uri without $args (set in config.conf)
 		$cacheKey = '$host$gnash_request_uri';
@@ -79,6 +80,7 @@ fastcgi_cache_methods GET HEAD;
 fastcgi_cache_key $cacheKey;
 fastcgi_cache_use_stale $serveStale;
 fastcgi_ignore_headers Cache-Control Expires Set-Cookie;
+fastcgi_next_upstream error timeout http_500 http_503;
 $cacheValid
 XYZZY;
 
@@ -89,14 +91,14 @@ XYZZY;
 
 		$checks = '';
 
-		foreach ($settings->includedUris as $in)
+		if (is_array($settings->includedUris)) foreach ($settings->includedUris as $in)
 		{
 			$checks .= 'if ($request_uri ~ "' . $in[0] . '") {' . PHP_EOL;
 			$checks .= '	set ' . $skip . ' 0;' . PHP_EOL;
 			$checks .= '}' . PHP_EOL;
 		}
 
-		foreach ($settings->excludedUris as $ex)
+		if (is_array($settings->excludedUris)) foreach ($settings->excludedUris as $ex)
 		{
 			$checks .= 'if ($request_uri ~ "' . $ex[0] . '") {' . PHP_EOL;
 			$checks .= '	set ' . $skip . ' 1;' . PHP_EOL;
@@ -133,6 +135,28 @@ XYZZY;
 			exec($settings->reloadCommand);
 	}
 
+	/**
+	 * Converts the given URL to a cache key
+	 *
+	 * @param string $url
+	 *
+	 * @return string
+	 */
+	public function urlToKey ($url)
+	{
+		$parts = parse_url($url);
+
+		$key = $parts['host'] . $parts['path'];
+
+		if (array_key_exists('query', $parts))
+			$key .= '?' . $parts['query'];
+
+		return md5($key);
+	}
+
+	/**
+	 * Purges the entire cache
+	 */
 	public function purgeAll ()
 	{
 		$cachePath = Craft::parseEnv(Gnash::getInstance()->getSettings()->cachePath);
@@ -144,18 +168,29 @@ XYZZY;
 	}
 
 	/**
+	 * Purges all caches that contain the given element
+	 *
 	 * @param Element|ElementInterface $element
 	 */
 	public function purgeElement ($element)
 	{
-		// $settings = Gnash::getInstance()->getSettings();
-		// $cachePath = Craft::parseEnv($settings->cachePath);
-		// $settings->includeQueryString
+		$settings = Gnash::getInstance()->getSettings();
+		$cachePath = rtrim(Craft::parseEnv($settings->cachePath), '/');
 
-		// TODO: Work out how to clear the cache for all uris that display this
-		//   element AND account for query strings...
+		// TODO: Get all keys for urls that contain this element
+		$keys = $this->_getStoredUrlKeys($element->url);
 
-		$this->purgeAll();
+		foreach ($keys as $key)
+		{
+			$l = count($key);
+			$path = $cachePath . '/';
+			$path .= substr($key, $l - 2) . '/';
+			$path .= substr($key, $l - 4, $l - 2) . '/';
+			$path .= $key;
+
+			if (file_exists($path))
+				unlink($path);
+		}
 	}
 
 	// Helpers
@@ -178,6 +213,20 @@ XYZZY;
 
 		foreach ($ri as $file)
 			$file->isDir() ? rmdir($file) : unlink($file);
+	}
+
+	private function _getStoredUrlKeys ($url)
+	{
+		if (Craft::$app->getDb()->getDriverName() === 'mysql')
+			$where = 'REGEXP_LIKE(url, \'' . $url . '[?]?(.*)\')';
+		else
+			$where = '[[url]] SIMILAR TO \'' . $url . '[?]?(.*)\'';
+
+		return (new Query())
+			->select('key')
+			->from('{{%gnash}}')
+			->where($where)
+			->column();
 	}
 
 }

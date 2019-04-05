@@ -11,6 +11,7 @@ namespace ether\gnash;
 use Craft;
 use craft\base\Model;
 use craft\base\Plugin;
+use craft\elements\Entry;
 use craft\errors\SiteNotFoundException;
 use craft\events\ElementEvent;
 use craft\events\MoveElementEvent;
@@ -96,6 +97,19 @@ class Gnash extends Plugin
 			Queue::EVENT_AFTER_ERROR,
 			[$this, 'onExecEvent']
 		);
+
+		if (Craft::$app->getRequest()->getIsGet() && !Craft::$app->getRequest()->getIsCpRequest())
+		{
+			$url = Craft::$app->getRequest()->getAbsoluteUrl();
+
+			Craft::$app->getDb()->createCommand()
+				->upsert('{{%gnash}}', [
+					'url' => $url,
+				], [
+					'key' => $this->gnash->urlToKey($url),
+				], [], false)
+				->execute();
+		}
 	}
 
 	// Settings
