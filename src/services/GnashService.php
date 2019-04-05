@@ -10,8 +10,14 @@ namespace ether\gnash\services;
 
 use Craft;
 use craft\base\Component;
+use craft\base\Element;
+use craft\base\ElementInterface;
 use craft\errors\SiteNotFoundException;
+use ether\gnash\Gnash;
 use ether\gnash\models\Settings;
+use FilesystemIterator;
+use RecursiveDirectoryIterator;
+use RecursiveIteratorIterator;
 
 /**
  * Class GnashService
@@ -23,6 +29,8 @@ class GnashService extends Component
 {
 
 	/**
+	 * Builds the Nginx config files
+	 *
 	 * @param Settings $settings
 	 *
 	 * @throws SiteNotFoundException
@@ -48,15 +56,34 @@ class GnashService extends Component
 		// 2. Build new config
 		$cachePath = Craft::parseEnv($settings->cachePath);
 
-		$cacheKey = '$scheme$request_method$host$uri';
-		if ($settings->includeQueryString)
-			$cacheKey .= '$is_args$args';
+		// $gnash_request_uri is the $request_uri without $args (set in config.conf)
+		$cacheKey = '$host$gnash_request_uri';
+		if ($settings->includeQueryString) $cacheKey .= '$is_args$args';
+
+		// Config: HTTP (config)
+		// ---------------------------------------------------------------------
 
 		$cacheValid = '';
 		foreach ($settings->cacheDuration as $cd)
 			$cacheValid .= 'fastcgi_cache_valid ' . $cd[0] . ' ' . $cd[1] . ';' . PHP_EOL;
 
 		$serveStale = $settings->serveStaleOnError ? 'error timeout' : 'off';
+
+		$config = <<<XYZZY
+map \$request_uri \$gnash_request_uri {
+    "~^(?P<path>[^?]*)(\?.*)?$" \$path;
+}
+		
+fastcgi_cache_path $cachePath levels=1:2 use_temp_path=off keys_zone=$cacheHandle:10m max_size=$settings->maxSize inactive=$settings->inactive;
+fastcgi_cache_methods GET HEAD;
+fastcgi_cache_key $cacheKey;
+fastcgi_cache_use_stale $serveStale;
+fastcgi_ignore_headers Cache-Control Expires Set-Cookie;
+$cacheValid
+XYZZY;
+
+		// Config: Server
+		// ---------------------------------------------------------------------
 
 		$skip = '$' . $cacheHandle . '_skip';
 
@@ -76,24 +103,17 @@ class GnashService extends Component
 			$checks .= '}' . PHP_EOL;
 		}
 
-		$config = <<<XYZZY
-fastcgi_cache_path $cachePath levels=1:2 use_temp_path=off keys_zone=$cacheHandle:10m max_size=$settings->maxSize inactive=$settings->inactive;
-fastcgi_cache_methods GET HEAD;
-fastcgi_cache_key $cacheKey;
-fastcgi_cache_use_stale $serveStale;
-fastcgi_ignore_headers Cache-Control Expires Set-Cookie;
-$cacheValid
-XYZZY;
-
 		$server = <<<XYZZY
 set $skip 1;
-
 $checks
 XYZZY;
 
+		// Config: Location
+		// ---------------------------------------------------------------------
 
 		$location = <<<XYZZY
 add_header X-Cache \$upstream_cache_status;
+# add_header X-Cache-Key $cacheKey;
 fastcgi_cache $cacheHandle;
 fastcgi_cache_bypass $skip;
 fastcgi_no_cache $skip;
@@ -108,6 +128,53 @@ XYZZY;
 		// 4. Reload Nginx
 		if (!empty($settings->reloadCommand))
 			exec($settings->reloadCommand);
+	}
+
+	public function purgeAll ()
+	{
+		$cachePath = Craft::parseEnv(Gnash::getInstance()->getSettings()->cachePath);
+
+		if (is_dir($cachePath))
+			$this->_purgeDir($cachePath);
+		else
+			mkdir($cachePath);
+	}
+
+	/**
+	 * @param Element|ElementInterface $element
+	 */
+	public function purgeElement ($element)
+	{
+		// $settings = Gnash::getInstance()->getSettings();
+		// $cachePath = Craft::parseEnv($settings->cachePath);
+		// $settings->includeQueryString
+
+		// TODO: Work out how to clear the cache for all uris that display this
+		//   element AND account for query strings...
+
+		$this->purgeAll();
+	}
+
+	// Helpers
+	// =========================================================================
+
+	/**
+	 * @param $dir
+	 */
+	private function _purgeDir ($dir)
+	{
+		$di = new RecursiveDirectoryIterator(
+			$dir,
+			FilesystemIterator::SKIP_DOTS
+		);
+
+		$ri = new RecursiveIteratorIterator(
+			$di,
+			RecursiveIteratorIterator::CHILD_FIRST
+		);
+
+		foreach ($ri as $file)
+			$file->isDir() ? rmdir($file) : unlink($file);
 	}
 
 }
