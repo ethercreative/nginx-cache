@@ -1,4 +1,9 @@
+![Nginx Cache](resources/banner.jpg)
+
 # Nginx Cache
+Harness the power of Nginx to statically cache your Craft site.
+
+TTFB <4ms!
 
 ## Usage
 ### Site Config
