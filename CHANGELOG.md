@@ -4,6 +4,10 @@
 
 ### Fixed
 - Fixed issue getting length of key
+- Fixed incorrect key folder structure
+
+### Improved
+- Database rows are cleared when cache is purged
 
 ## 1.0.1 - 2019-04-08
 ### Added

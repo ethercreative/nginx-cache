@@ -206,6 +206,7 @@ XYZZY;
 
 	/**
 	 * Purges the entire cache
+	 * @throws Exception
 	 */
 	public function purgeAll ()
 	{
@@ -215,12 +216,16 @@ XYZZY;
 			$this->_purgeDir($cachePath);
 		else
 			mkdir($cachePath);
+
+		$this->_truncate();
 	}
 
 	/**
 	 * Purges all caches that contain the given element
 	 *
 	 * @param Element|ElementInterface|int $elementOrId
+	 *
+	 * @throws Exception
 	 */
 	public function purgeElement ($elementOrId)
 	{
@@ -236,6 +241,8 @@ XYZZY;
 	 * Purges all caches for the given URL (will also purge query strings)
 	 *
 	 * @param string $url
+	 *
+	 * @throws Exception
 	 */
 	public function purgeUrl ($url)
 	{
@@ -265,6 +272,11 @@ XYZZY;
 			$file->isDir() ? rmdir($file) : unlink($file);
 	}
 
+	/**
+	 * @param $keys
+	 *
+	 * @throws Exception
+	 */
 	private function _purgeKeys ($keys)
 	{
 		$settings  = Gnash::getInstance()->getSettings();
@@ -281,6 +293,8 @@ XYZZY;
 			if (file_exists($path))
 				unlink($path);
 		}
+
+		$this->_dropKeys($keys);
 	}
 
 	private function _getKeysByElementId ($id)
@@ -304,6 +318,30 @@ XYZZY;
 			->from('{{%gnash}}')
 			->where($where)
 			->column();
+	}
+
+	/**
+	 * @throws Exception
+	 */
+	private function _truncate ()
+	{
+		Craft::$app->getDb()->createCommand()
+			->truncateTable('{{%gnash}}')
+			->execute();
+	}
+
+	/**
+	 * @param $keys
+	 *
+	 * @throws Exception
+	 */
+	private function _dropKeys ($keys)
+	{
+		Craft::$app->getDb()->createCommand()
+			->delete(
+				'{{%gnash}} gnash',
+				['IN', 'key', $keys]
+			)->execute();
 	}
 
 }

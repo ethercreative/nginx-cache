@@ -12,6 +12,7 @@ use Craft;
 use ether\gnash\Gnash;
 use yii\console\Controller;
 use yii\console\ExitCode;
+use yii\db\Exception;
 
 /**
  * Class DefaultController
@@ -28,6 +29,7 @@ class DefaultController extends Controller
 	 * ./craft nginx-cache/purge-all
 	 *
 	 * @return int
+	 * @throws Exception
 	 */
 	public function actionPurgeAll ()
 	{
@@ -44,6 +46,7 @@ class DefaultController extends Controller
 	 * @param string $elementIds - Comma-separated string of element IDs
 	 *
 	 * @return int
+	 * @throws Exception
 	 */
 	public function actionPurgeElements (string $elementIds)
 	{
@@ -66,6 +69,7 @@ class DefaultController extends Controller
 	 * @param string $url - The URL to purge
 	 *
 	 * @return int
+	 * @throws Exception
 	 */
 	public function actionPurgeUrl (string $url)
 	{

@@ -193,16 +193,31 @@ class Gnash extends Plugin
 		$event->types[] = GnashUtility::class;
 	}
 
+	/**
+	 * @param ElementEvent $event
+	 *
+	 * @throws Exception
+	 */
 	public function onElementEvent (ElementEvent $event)
 	{
 		$this->gnash->purgeElement($event->element);
 	}
 
+	/**
+	 * @param MoveElementEvent $event
+	 *
+	 * @throws Exception
+	 */
 	public function onElementMoveEvent (MoveElementEvent $event)
 	{
 		$this->gnash->purgeElement($event->element);
 	}
 
+	/**
+	 * @param ExecEvent $event
+	 *
+	 * @throws Exception
+	 */
 	public function onExecEvent (ExecEvent $event)
 	{
 		if ($event->job instanceof ResaveElements)

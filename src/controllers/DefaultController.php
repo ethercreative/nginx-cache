@@ -11,6 +11,7 @@ namespace ether\gnash\controllers;
 use Craft;
 use craft\web\Controller;
 use ether\gnash\Gnash;
+use yii\db\Exception;
 use yii\web\BadRequestHttpException;
 
 /**
@@ -22,6 +23,9 @@ use yii\web\BadRequestHttpException;
 class DefaultController extends Controller
 {
 
+	/**
+	 * @throws Exception
+	 */
 	public function actionPurgeAll ()
 	{
 		Gnash::getInstance()->gnash->purgeAll();
@@ -29,6 +33,7 @@ class DefaultController extends Controller
 
 	/**
 	 * @throws BadRequestHttpException
+	 * @throws Exception
 	 */
 	public function actionPurgeElement ()
 	{
@@ -43,6 +48,7 @@ class DefaultController extends Controller
 
 	/**
 	 * @throws BadRequestHttpException
+	 * @throws Exception
 	 */
 	public function actionPurgeUrl()
 	{
