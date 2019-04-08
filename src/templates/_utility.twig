@@ -1,0 +1,86 @@
+{% from '_includes/forms' import textField, elementSelectField, field %}
+
+<form method="post">
+	{{ csrfInput() }}
+	{{ redirectInput('utilities/nginx-cache') }}
+	<input type="hidden" name="action" value="nginx-cache/purge-all">
+
+	<p class="light">{{ 'Completely clear the entire cache'|t('nginx-cache') }}</p>
+	<input type="submit" class="btn submit" value="{{ 'Purge Entire Cache'|t('nginx-cache') }}"/>
+</form>
+
+<hr>
+
+<form method="post">
+	{{ csrfInput() }}
+	{{ redirectInput('utilities/nginx-cache') }}
+	<input type="hidden" name="action" value="nginx-cache/purge-element">
+
+	{% set children %}
+		<div style="display:flex" id="elementTypeSelector">
+			<div style="margin-right:14px">
+				{% set select %}
+					<div class="select">
+						<select name="elementType" id="elementType">
+							{% for val, lab in typeOpts %}
+								<option value="{{ val|replace('\\', '') }}">{{ lab }}</option>
+							{% endfor %}
+						</select>
+					</div>
+				{% endset %}
+				{{ field({
+					label: 'Element Type'|t('nginx-cache'),
+					required: true,
+				}, select) }}
+			</div>
+
+			{% for type in elementTypes %}
+				<div class="{{ loop.first ?: 'hidden' }}" data-type="{{ type|replace('\\', '') }}" style="width:100%">
+					{{ elementSelectField({
+						id: 'element-' ~ loop.index,
+						name: 'element-' ~ (type|replace('\\', '')),
+						label: 'Element(s)'|t('nginx-cache'),
+						required: true,
+						elementType: type,
+					}) }}
+				</div>
+			{% endfor %}
+		</div>
+	{% endset %}
+	{{ field({
+		instructions: 'Purge the cache of the given element'|t('nginx-cache'),
+	}, children) }}
+
+	<input type="submit" class="btn submit" value="{{ 'Purge Element Cache'|t('nginx-cache') }}"/>
+</form>
+
+<hr>
+
+<form method="post">
+	{{ csrfInput() }}
+	{{ redirectInput('utilities/nginx-cache') }}
+	<input type="hidden" name="action" value="nginx-cache/purge-url">
+
+	{{ textField({
+		name: 'url',
+		label: 'URL'|t('app'),
+		instructions: 'Purge the cache of the given URL (must be absolute, will also purge query strings if not specified).'|t('nginx-cache'),
+		required: true,
+		type: 'url',
+	}) }}
+
+	<input type="submit" class="btn submit" value="{{ 'Purge URL Cache'|t('nginx-cache') }}"/>
+</form>
+
+{% js %}
+const elementTypeSelector = document.getElementById('elementTypeSelector');
+const types = elementTypeSelector.querySelectorAll('[data-type]');
+document.getElementById('elementType').addEventListener('change', function (e) {
+	for (let i = 0, l = types.length; i < l; ++i) {
+		if (types[i].dataset.type === e.target.value)
+			types[i].classList.remove('hidden');
+		else
+			types[i].classList.add('hidden');
+	}
+});
+{% endjs %}

@@ -1,6 +1,11 @@
 <?php
 
 return [
+	'Nginx Cache' => 'Nginx Cache',
+
+	// Settings
+	// =========================================================================
+
 	'Cache Path' => 'Cache Path',
 	'The cache storage path (must be absolute)' => 'The cache storage path (must be absolute)',
 
@@ -33,5 +38,19 @@ return [
 	'Add URI' => 'Add URI',
 
 	'Reload Command' => 'Reload Command',
-	'The command to reload nginx (won\'t run if blank).' => 'The command to reload nginx (won\'t run if blank).',
+	'The command to reload nginx (won\'t run if blank, check the docs if your command isn\'t working' => 'The command to reload nginx (won\'t run if blank, check the docs if your command isn\'t working',
+
+	// Utility
+	// =========================================================================
+
+	'Completely clear the entire cache' => 'Completely clear the entire cache',
+	'Purge Entire Cache' => 'Purge Entire Cache',
+
+	'Element Type' => 'Element Type',
+	'Element(s)' => 'Element(s)',
+	'Purge the cache of the given element' => 'Purge the cache of the given element',
+	'Purge Element Cache' => 'Purge Element Cache',
+
+	'Purge the cache of the given URL (must be absolute, will also purge query strings if not specified).' => 'Purge the cache of the given URL (must be absolute, will also purge query strings if not specified).',
+	'Purge URL Cache' => 'Purge URL Cache',
 ];

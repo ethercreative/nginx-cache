@@ -11,20 +11,26 @@ namespace ether\gnash;
 use Craft;
 use craft\base\Model;
 use craft\base\Plugin;
-use craft\elements\Entry;
+use craft\elements\db\ElementQuery;
 use craft\errors\SiteNotFoundException;
 use craft\events\ElementEvent;
 use craft\events\MoveElementEvent;
+use craft\events\PopulateElementEvent;
+use craft\events\RegisterComponentTypesEvent;
 use craft\queue\jobs\ResaveElements;
 use craft\queue\Queue;
 use craft\services\Elements;
 use craft\services\Structures;
+use craft\services\Utilities;
 use ether\gnash\models\Settings;
 use ether\gnash\services\GnashService;
+use ether\gnash\utilities\GnashUtility;
 use Twig\Error\LoaderError;
 use Twig\Error\RuntimeError;
 use Twig\Error\SyntaxError;
 use yii\base\Event;
+use yii\base\InvalidConfigException;
+use yii\db\Exception;
 use yii\queue\ExecEvent;
 
 /**
@@ -45,9 +51,18 @@ class Gnash extends Plugin
 	// Craft
 	// =========================================================================
 
+	/**
+	 * @inheritDoc
+	 * @throws Exception
+	 */
 	public function init ()
 	{
 		parent::init();
+
+		Craft::setAlias(
+			'gnash',
+			__DIR__
+		);
 
 		$this->setComponents([
 			'gnash' => GnashService::class,
@@ -55,6 +70,12 @@ class Gnash extends Plugin
 
 		// Events
 		// ---------------------------------------------------------------------
+
+		Event::on(
+			Utilities::class,
+			Utilities::EVENT_REGISTER_UTILITY_TYPES,
+			[$this, 'onRegisterUtilityType']
+		);
 
 		Event::on(
 			Elements::class,
@@ -98,17 +119,20 @@ class Gnash extends Plugin
 			[$this, 'onExecEvent']
 		);
 
-		if (Craft::$app->getRequest()->getIsGet() && !Craft::$app->getRequest()->getIsCpRequest())
-		{
-			$url = Craft::$app->getRequest()->getAbsoluteUrl();
+		$request = Craft::$app->getRequest();
 
-			Craft::$app->getDb()->createCommand()
-				->upsert('{{%gnash}}', [
-					'url' => $url,
-				], [
-					'key' => $this->gnash->urlToKey($url),
-				], [], false)
-				->execute();
+		if (
+			$request->getIsGet() &&
+			!$request->getIsCpRequest() &&
+			Craft::$app->getResponse()->getIsOk()
+		) {
+			Event::on(
+				ElementQuery::class,
+				ElementQuery::EVENT_AFTER_POPULATE_ELEMENT,
+				[$this, 'onElementPopulate']
+			);
+
+			$this->gnash->cacheUrl();
 		}
 	}
 
@@ -129,7 +153,7 @@ class Gnash extends Plugin
 	protected function settingsHtml ()
 	{
 		return Craft::$app->getView()->renderTemplate(
-			'nginx-cache/settings',
+			'nginx-cache/_settings',
 			[ 'settings' => $this->getSettings() ]
 		);
 	}
@@ -163,6 +187,11 @@ class Gnash extends Plugin
 		parent::afterInstall();
 	}
 
+	public function onRegisterUtilityType (RegisterComponentTypesEvent $event)
+	{
+		$event->types[] = GnashUtility::class;
+	}
+
 	public function onElementEvent (ElementEvent $event)
 	{
 		$this->gnash->purgeElement($event->element);
@@ -177,6 +206,52 @@ class Gnash extends Plugin
 	{
 		if ($event->job instanceof ResaveElements)
 			$this->gnash->purgeAll();
+	}
+
+	/**
+	 * @param PopulateElementEvent $event
+	 *
+	 * @throws Exception
+	 */
+	public function onElementPopulate (PopulateElementEvent $event)
+	{
+		$this->gnash->cacheElement($event->element);
+	}
+
+	// Helpers
+	// =========================================================================
+
+	/**
+	 * Adds support for additional actions on the Default controller
+	 *
+	 * @param string $route
+	 *
+	 * @return array|bool
+	 * @throws InvalidConfigException
+	 */
+	public function createController ($route)
+	{
+		if (strpos($route, '/') === false)
+		{
+			if (strpos($route, '-') !== false)
+			{
+				$route = $this->defaultRoute . '/' . $route;
+			}
+			else
+			{
+				$className = $className = preg_replace_callback(
+				'%-([a-z0-9_])%i',
+					function ($matches) {
+						return ucfirst($matches[1]);
+					}, ucfirst($route)
+				) . 'Controller';
+				$className = $this->controllerNamespace . '\\' . $className;
+				if (!class_exists($className))
+					$route = $this->defaultRoute . '/' . $route;
+			}
+		}
+
+		return parent::createController($route);
 	}
 
 }

@@ -24,10 +24,18 @@ class Install extends Migration
 		$this->createTable(
 			'{{%gnash}}',
 			[
-				'id' => $this->primaryKey(),
-				'url' => $this->string()->notNull()->unique(),
-				'key' => $this->string()->notNull(),
+				'id'        => $this->primaryKey(),
+				'elementId' => $this->integer(),
+				'url'       => $this->string()->notNull(),
+				'key'       => $this->string()->notNull(),
 			]
+		);
+
+		$this->createIndex(
+			null,
+			'{{%gnash}}',
+			['elementId', 'url'],
+			true
 		);
 
 		return true;

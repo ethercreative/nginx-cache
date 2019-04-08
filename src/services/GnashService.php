@@ -19,6 +19,7 @@ use ether\gnash\models\Settings;
 use FilesystemIterator;
 use RecursiveDirectoryIterator;
 use RecursiveIteratorIterator;
+use yii\db\Exception;
 
 /**
  * Class GnashService
@@ -136,6 +137,46 @@ XYZZY;
 	}
 
 	/**
+	 * Cache the given element at the current URL
+	 *
+	 * @param $element
+	 *
+	 * @throws Exception
+	 */
+	public function cacheElement ($element)
+	{
+		$url = Craft::$app->getRequest()->getAbsoluteUrl();
+
+		Craft::$app->getDb()->createCommand()
+			->upsert(
+				'{{%gnash}}',
+				[ 'url' => $url, 'elementId' => $element->id ],
+				[ 'key' => Gnash::getInstance()->gnash->urlToKey($url) ],
+				[],
+				false
+			)->execute();
+	}
+
+	/**
+	 * Cache the current URL
+	 *
+	 * @throws Exception
+	 */
+	public function cacheUrl ()
+	{
+		$url = Craft::$app->getRequest()->getAbsoluteUrl();
+
+		Craft::$app->getDb()->createCommand()
+			->upsert(
+				'{{%gnash}}',
+				[ 'url' => $url ],
+				[ 'key' => Gnash::getInstance()->gnash->urlToKey($url) ],
+				[],
+				false
+			)->execute();
+	}
+
+	/**
 	 * Converts the given URL to a cache key
 	 *
 	 * @param string $url
@@ -170,27 +211,27 @@ XYZZY;
 	/**
 	 * Purges all caches that contain the given element
 	 *
-	 * @param Element|ElementInterface $element
+	 * @param Element|ElementInterface|int $elementOrId
 	 */
-	public function purgeElement ($element)
+	public function purgeElement ($elementOrId)
 	{
-		$settings = Gnash::getInstance()->getSettings();
-		$cachePath = rtrim(Craft::parseEnv($settings->cachePath), '/');
+		if ($elementOrId instanceof ElementInterface)
+			$keys = $this->_getKeysByElementId($elementOrId->id);
+		else
+			$keys = $this->_getKeysByElementId($elementOrId);
 
-		// TODO: Get all keys for urls that contain this element
-		$keys = $this->_getStoredUrlKeys($element->url);
+		$this->_purgeKeys($keys);
+	}
 
-		foreach ($keys as $key)
-		{
-			$l = count($key);
-			$path = $cachePath . '/';
-			$path .= substr($key, $l - 2) . '/';
-			$path .= substr($key, $l - 4, $l - 2) . '/';
-			$path .= $key;
-
-			if (file_exists($path))
-				unlink($path);
-		}
+	/**
+	 * Purges all caches for the given URL (will also purge query strings)
+	 *
+	 * @param string $url
+	 */
+	public function purgeUrl ($url)
+	{
+		$keys = $this->_getKeysByUrl($url);
+		$this->_purgeKeys($keys);
 	}
 
 	// Helpers
@@ -215,7 +256,34 @@ XYZZY;
 			$file->isDir() ? rmdir($file) : unlink($file);
 	}
 
-	private function _getStoredUrlKeys ($url)
+	private function _purgeKeys ($keys)
+	{
+		$settings  = Gnash::getInstance()->getSettings();
+		$cachePath = rtrim(Craft::parseEnv($settings->cachePath), '/');
+
+		foreach ($keys as $key)
+		{
+			$l    = count($key);
+			$path = $cachePath . '/';
+			$path .= substr($key, $l - 2) . '/';
+			$path .= substr($key, $l - 4, $l - 2) . '/';
+			$path .= $key;
+
+			if (file_exists($path))
+				unlink($path);
+		}
+	}
+
+	private function _getKeysByElementId ($id)
+	{
+		return (new Query())
+			->select('key')
+			->from('{{%gnash}}')
+			->where(['elementId' => $id])
+			->column();
+	}
+
+	private function _getKeysByUrl ($url)
 	{
 		if (Craft::$app->getDb()->getDriverName() === 'mysql')
 			$where = 'REGEXP_LIKE(url, \'' . $url . '[?]?(.*)\')';
