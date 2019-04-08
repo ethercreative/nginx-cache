@@ -1,4 +1,4 @@
-## [Unreleased] 1.0.2
+## 1.0.2 - 2019-04-08
 ### Added
 - Added console commands for purging the cache
 - Added option to purge cache by related elements
