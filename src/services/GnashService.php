@@ -272,7 +272,7 @@ XYZZY;
 
 		foreach ($keys as $key)
 		{
-			$l    = count($key);
+			$l    = strlen($key);
 			$path = $cachePath . '/';
 			$path .= substr($key, $l - 2) . '/';
 			$path .= substr($key, $l - 4, $l - 2) . '/';
