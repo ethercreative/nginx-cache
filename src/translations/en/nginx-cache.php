@@ -6,6 +6,9 @@ return [
 	// Settings
 	// =========================================================================
 
+	'Enabled' => 'Enabled',
+	'Whether or not Nginx caching is enabled' => 'Whether or not Nginx caching is enabled',
+
 	'Cache Path' => 'Cache Path',
 	'The cache storage path (must be absolute)' => 'The cache storage path (must be absolute)',
 

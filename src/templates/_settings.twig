@@ -5,12 +5,19 @@
 	editableTableField
 %}
 
+{{ lightswitchField({
+	name: 'enabled',
+	label: 'Enabled'|t('nginx-cache'),
+	instructions: 'Whether or not Nginx caching is enabled'|t('nginx-cache'),
+	on: settings.enabled,
+	first: true,
+}) }}
+
 {{ autosuggestField({
 	name: 'cachePath',
 	label: 'Cache Path'|t('nginx-cache'),
 	instructions: 'The cache storage path (must be absolute)'|t('nginx-cache'),
 	value: settings.cachePath,
-	first: true,
 	required: true,
 	suggestEnvVars: true,
 	suggestAliases: true,

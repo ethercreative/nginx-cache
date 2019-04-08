@@ -1,7 +1,7 @@
 {
   "name": "ether/nginx-cache",
   "description": "Smart static caching with Nginx",
-  "version": "1.0.0",
+  "version": "1.0.1",
   "type": "craft-plugin",
   "license": "MIT",
   "minimum-stability": "dev",

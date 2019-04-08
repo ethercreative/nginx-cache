@@ -127,9 +127,18 @@ XYZZY;
 
 		// 3. Write the config file
 		if (!is_dir($dir)) mkdir($dir);
-		file_put_contents($configPath, $config);
-		file_put_contents($serverPath, $server);
-		file_put_contents($locationPath, $location);
+		if ($settings->enabled)
+		{
+			file_put_contents($configPath, $config);
+			file_put_contents($serverPath, $server);
+			file_put_contents($locationPath, $location);
+		}
+		else
+		{
+			file_put_contents($configPath, '');
+			file_put_contents($serverPath, '');
+			file_put_contents($locationPath, '');
+		}
 
 		// 4. Reload Nginx
 		if (!empty($settings->reloadCommand))

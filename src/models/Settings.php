@@ -19,6 +19,9 @@ use craft\base\Model;
 class Settings extends Model
 {
 
+	/** @var bool - Whether or not nginx caching is enabled */
+	public $enabled = true;
+
 	/** @var string - The cache storage path (must be absolute) */
 	public $cachePath = '@root/cache';
 
