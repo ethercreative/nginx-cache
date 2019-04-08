@@ -274,8 +274,8 @@ XYZZY;
 		{
 			$l    = strlen($key);
 			$path = $cachePath . '/';
-			$path .= substr($key, $l - 2) . '/';
-			$path .= substr($key, $l - 4, $l - 2) . '/';
+			$path .= substr($key, $l - 1) . '/';
+			$path .= substr($key, $l - 3, 2) . '/';
 			$path .= $key;
 
 			if (file_exists($path))

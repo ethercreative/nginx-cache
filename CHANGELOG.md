@@ -1,4 +1,7 @@
 ## [Unreleased] 1.0.2
+### Added
+- Added console commands for purging the cache
+
 ### Fixed
 - Fixed issue getting length of key
 

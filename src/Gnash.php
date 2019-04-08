@@ -122,6 +122,7 @@ class Gnash extends Plugin
 		$request = Craft::$app->getRequest();
 
 		if (
+			!$request->getIsConsoleRequest() &&
 			$request->getIsGet() &&
 			!$request->getIsCpRequest() &&
 			Craft::$app->getResponse()->getIsOk()
