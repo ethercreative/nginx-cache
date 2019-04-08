@@ -3,7 +3,7 @@
 # Nginx Cache
 Harness the power of Nginx to statically cache your Craft site.
 
-TTFB <4ms!
+TTFB below 5ms!
 
 ## Usage
 ### Site Config
