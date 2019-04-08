@@ -1,8 +1,8 @@
-{% from '_includes/forms' import textField, elementSelectField, field %}
+{% from '_includes/forms' import textField, elementSelectField, lightswitchField, field %}
 
 <form method="post">
 	{{ csrfInput() }}
-	{{ redirectInput('utilities/nginx-cache') }}
+	{{ redirectInput('utilities/gnash') }}
 	<input type="hidden" name="action" value="nginx-cache/purge-all">
 
 	<p class="light">{{ 'Completely clear the entire cache'|t('nginx-cache') }}</p>
@@ -13,29 +13,27 @@
 
 <form method="post">
 	{{ csrfInput() }}
-	{{ redirectInput('utilities/nginx-cache') }}
+	{{ redirectInput('utilities/gnash') }}
 	<input type="hidden" name="action" value="nginx-cache/purge-element">
 
 	{% set children %}
-		<div style="display:flex" id="elementTypeSelector">
-			<div style="margin-right:14px">
-				{% set select %}
-					<div class="select">
-						<select name="elementType" id="elementType">
-							{% for val, lab in typeOpts %}
-								<option value="{{ val|replace('\\', '') }}">{{ lab }}</option>
-							{% endfor %}
-						</select>
-					</div>
-				{% endset %}
-				{{ field({
-					label: 'Element Type'|t('nginx-cache'),
-					required: true,
-				}, select) }}
-			</div>
+		<div id="elementTypeSelector">
+			{% set select %}
+				<div class="select">
+					<select name="elementType" id="elementType">
+						{% for val, lab in typeOpts %}
+							<option value="{{ val|replace('\\', '') }}">{{ lab }}</option>
+						{% endfor %}
+					</select>
+				</div>
+			{% endset %}
+			{{ field({
+				label: 'Element Type'|t('nginx-cache'),
+				required: true,
+			}, select) }}
 
 			{% for type in elementTypes %}
-				<div class="{{ loop.first ?: 'hidden' }}" data-type="{{ type|replace('\\', '') }}" style="width:100%">
+				<div class="{{ loop.first ?: 'hidden' }}" data-type="{{ type|replace('\\', '') }}">
 					{{ elementSelectField({
 						id: 'element-' ~ loop.index,
 						name: 'element-' ~ (type|replace('\\', '')),
@@ -45,6 +43,12 @@
 					}) }}
 				</div>
 			{% endfor %}
+
+			{{ lightswitchField({
+				name: 'relatedTo',
+				label: 'Related To'|t('nginx-cache'),
+				instructions: 'Will clear the cache for all elements related to the selected elements'|t('nginx-cache'),
+			}) }}
 		</div>
 	{% endset %}
 	{{ field({
@@ -58,7 +62,7 @@
 
 <form method="post">
 	{{ csrfInput() }}
-	{{ redirectInput('utilities/nginx-cache') }}
+	{{ redirectInput('utilities/gnash') }}
 	<input type="hidden" name="action" value="nginx-cache/purge-url">
 
 	{{ textField({

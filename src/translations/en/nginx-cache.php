@@ -2,6 +2,7 @@
 
 return [
 	'Nginx Cache' => 'Nginx Cache',
+	'Cache Cleared' => 'Cache Cleared',
 
 	// Settings
 	// =========================================================================
@@ -51,6 +52,8 @@ return [
 
 	'Element Type' => 'Element Type',
 	'Element(s)' => 'Element(s)',
+	'Related To' => 'Related To',
+	'Will clear the cache for all elements related to the selected elements' => 'Will clear the cache for all elements related to the selected elements',
 	'Purge the cache of the given element' => 'Purge the cache of the given element',
 	'Purge Element Cache' => 'Purge Element Cache',
 

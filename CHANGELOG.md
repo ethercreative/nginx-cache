@@ -1,6 +1,7 @@
 ## [Unreleased] 1.0.2
 ### Added
 - Added console commands for purging the cache
+- Added option to purge cache by related elements
 
 ### Fixed
 - Fixed issue getting length of key

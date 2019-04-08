@@ -13,6 +13,7 @@ use craft\base\Component;
 use craft\base\Element;
 use craft\base\ElementInterface;
 use craft\db\Query;
+use craft\db\Table;
 use craft\errors\SiteNotFoundException;
 use ether\gnash\Gnash;
 use ether\gnash\models\Settings;
@@ -29,6 +30,9 @@ use yii\db\Exception;
  */
 class GnashService extends Component
 {
+
+	// Config
+	// =========================================================================
 
 	/**
 	 * Builds the Nginx config files
@@ -145,6 +149,9 @@ XYZZY;
 			exec($settings->reloadCommand);
 	}
 
+	// Cache
+	// =========================================================================
+
 	/**
 	 * Cache the given element at the current URL
 	 *
@@ -185,24 +192,8 @@ XYZZY;
 			)->execute();
 	}
 
-	/**
-	 * Converts the given URL to a cache key
-	 *
-	 * @param string $url
-	 *
-	 * @return string
-	 */
-	public function urlToKey ($url)
-	{
-		$parts = parse_url($url);
-
-		$key = $parts['host'] . $parts['path'];
-
-		if (array_key_exists('query', $parts))
-			$key .= '?' . $parts['query'];
-
-		return md5($key);
-	}
+	// Purge
+	// =========================================================================
 
 	/**
 	 * Purges the entire cache
@@ -252,6 +243,59 @@ XYZZY;
 
 	// Helpers
 	// =========================================================================
+
+	/**
+	 * Converts the given URL to a cache key
+	 *
+	 * @param string $url
+	 *
+	 * @return string
+	 */
+	public function urlToKey ($url)
+	{
+		$parts = parse_url($url);
+
+		$key = $parts['host'] . $parts['path'];
+
+		if (array_key_exists('query', $parts))
+			$key .= '?' . $parts['query'];
+
+		return md5($key);
+	}
+
+	/**
+	 * @param $elementIds
+	 *
+	 * @return array
+	 */
+	public function getRelatedIds ($elementIds)
+	{
+		$originalIds = $elementIds;
+
+		$elementIds = (new Query())
+			->select('sourceId, targetId')
+			->from(Table::RELATIONS)
+			->where(
+				[
+					'OR',
+					['IN', 'sourceId', $elementIds],
+					['IN', 'targetId', $elementIds],
+				]
+			)->all();
+
+		return array_reduce($elementIds, function ($a, $b) use ($originalIds) {
+			if (!in_array($b['sourceId'], $originalIds) && !in_array($b['sourceId'], $a))
+				$a[] = $b['sourceId'];
+
+			if (!in_array($b['targetId'], $originalIds) && !in_array($b['targetId'], $a))
+				$a[] = $b['targetId'];
+
+			return $a;
+		}, []);
+	}
+
+	// Helpers: Private
+	// -------------------------------------------------------------------------
 
 	/**
 	 * @param $dir

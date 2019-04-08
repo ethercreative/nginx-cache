@@ -41,19 +41,24 @@ class DefaultController extends Controller
 	/**
 	 * Purge elements from the cache by their given IDs
 	 *
-	 * ./craft nginx-cache/purge-elements 1,3,4
+	 * ./craft nginx-cache/purge-elements 1,3,4 [true]
 	 *
 	 * @param string $elementIds - Comma-separated string of element IDs
+	 * @param bool $relatedTo - Will clear the cache for all elements related
+	 *                          to the selected elements
 	 *
 	 * @return int
 	 * @throws Exception
 	 */
-	public function actionPurgeElements (string $elementIds)
+	public function actionPurgeElements (string $elementIds, $relatedTo = false)
 	{
 		$elementIds = explode(
 			',',
 			str_replace(' ', '', $elementIds)
 		);
+
+		if ($relatedTo)
+			$elementIds = Gnash::getInstance()->gnash->getRelatedIds($elementIds);
 
 		foreach ($elementIds as $id)
 			Gnash::getInstance()->gnash->purgeElement((int) $id);
