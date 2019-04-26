@@ -46,5 +46,5 @@ each save of the plugin config.
 
 ### Docker
 If you are using Docker ensure that your chosen cache directory and Craft's 
-storage directory (or at lease the Nginx directory in storage) are available to 
+storage directory (or at least the Nginx directory in storage) are available to 
 both your PHP and Nginx containers.
